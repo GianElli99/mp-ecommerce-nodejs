@@ -4,6 +4,8 @@ var exphbs = require('express-handlebars');
 const path = require('path');
 const mercadopago = require('mercadopago');
 
+const { URL } = process.env;
+
 var app = express();
 
 app.use(cors());
@@ -21,25 +23,28 @@ app.get('/', (req, res) => {
 });
 
 app.get('/detail', (req, res) => {
+  console.log(req.query);
   res.render('detail', req.query);
 });
 
-app.post('/preference', (req, res) => {
+app.post('/preference', async (req, res) => {
+  const { title, unit_price, picture_url } = req.body;
+  var pictureSanitized = picture_url.substring(1);
   let preference = {
     items: [
       {
         id: '1234',
-        title: 'Botas', //req
-        picture_url: 'https://www.mercadopago.com/org-img/MP3/home/logomp3.gif', //req
-        unit_price: 450, //req
+        title: title,
+        picture_url: `${URL}${pictureSanitized}`,
+        unit_price: Number(unit_price),
         quantity: 1,
         description: 'Dispositivo móvil de Tienda e-commerce',
       },
     ],
     back_urls: {
-      success: 'http://localhost:8080/success',
-      failure: 'http://localhost:8080/feedback',
-      pending: 'http://localhost:8080/feedback',
+      success: `${URL}/success`,
+      failure: `${URL}/failure`,
+      pending: `${URL}/pending`,
     },
     auto_return: 'approved',
     external_reference: 'gianelli99@hotmail.com',
@@ -49,7 +54,7 @@ app.post('/preference', (req, res) => {
       email: 'test_user_63274575@testuser.com',
       phone: {
         area_code: '11',
-        number: '22223333',
+        number: 22223333,
       },
       address: {
         street_name: 'Falsa',
@@ -70,8 +75,16 @@ app.post('/preference', (req, res) => {
       ],
       installments: 6,
     },
-    notification_url: 'https://qweqweqwe/webhook',
+    notification_url: 'http://localhost:3000/notification?source_news=webhook',
   };
+  const response = await mercadopago.preferences.create(preference);
+  console.log(response);
+  res.redirect(response.body.init_point);
+});
+
+app.post('/notifications', (req, res) => {
+  console.log(req.body);
+  res.sendStatus(200);
 });
 
 module.exports = {

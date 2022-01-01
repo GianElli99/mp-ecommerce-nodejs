@@ -124,17 +124,16 @@
                   {{unit}}
                 </h3>
               </div>
-              <form action='/preference' method='post'>
-                <input type='hidden' name='title' value={{title}} />
-                <input type='hidden' name='unit_price' value={{price}} />
-                <input type='hidden' name='picture_url' value={{img}} />
-                <button type='submit'>Comprar</button>
-              </form>
+              <button
+                type='submit'
+                class='mercadopago-button'
+                formmethod='post'
+              >Pagar</button>
             </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-  <script src='https://www.mercadopago.com/v2/security.js' view='item'></script>
+  <script src='https://www.mercadopago.com/v2/security.js' view=''></script>
 </div>
