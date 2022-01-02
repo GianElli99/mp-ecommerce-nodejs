@@ -3,10 +3,16 @@ var cors = require('cors');
 var exphbs = require('express-handlebars');
 const path = require('path');
 const mercadopago = require('mercadopago');
+const query = require('express/lib/middleware/query');
 
-const { URL } = process.env;
+const { URL, ACCESS_TOKEN, INTEGRATOR_ID } = process.env;
 
 var app = express();
+
+mercadopago.configure({
+  access_token: ACCESS_TOKEN,
+  integrator_id: INTEGRATOR_ID,
+});
 
 app.use(cors());
 app.use(express.urlencoded({ extended: false }));
@@ -27,7 +33,7 @@ app.get('/detail', (req, res) => {
   res.render('detail', req.query);
 });
 
-app.post('/preference', async (req, res) => {
+app.post('/preference', (req, res) => {
   const { title, unit_price, picture_url } = req.body;
   var pictureSanitized = picture_url.substring(1);
   let preference = {
@@ -35,16 +41,16 @@ app.post('/preference', async (req, res) => {
       {
         id: '1234',
         title: title,
-        picture_url: `${URL}${pictureSanitized}`,
+        picture_url: `${URL}/${pictureSanitized}`,
         unit_price: Number(unit_price),
         quantity: 1,
         description: 'Dispositivo móvil de Tienda e-commerce',
       },
     ],
     back_urls: {
-      success: `${URL}/success`,
-      failure: `${URL}/failure`,
-      pending: `${URL}/pending`,
+      success: `${URL}/feedback`,
+      failure: `${URL}/feedback`,
+      pending: `${URL}/feedback`,
     },
     auto_return: 'approved',
     external_reference: 'gianelli99@hotmail.com',
@@ -75,15 +81,18 @@ app.post('/preference', async (req, res) => {
       ],
       installments: 6,
     },
-    notification_url: 'http://localhost:3000/notification?source_news=webhook',
+    notification_url: `https://webhook.site/d501ba4d-9e61-4d7a-89ad-6b43e3a12b99?source_news=webhook`,
   };
-  const response = await mercadopago.preferences.create(preference);
-  console.log(response);
-  res.redirect(response.body.init_point);
+  mercadopago.preferences.create(preference).then((response) => {
+    res.redirect(response.body.init_point);
+  });
+});
+
+app.get('/feedback', (req, res) => {
+  res.render('feedback', req.query);
 });
 
 app.post('/notifications', (req, res) => {
-  console.log(req.body);
   res.sendStatus(200);
 });
 
